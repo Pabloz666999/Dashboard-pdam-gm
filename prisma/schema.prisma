@@ -1,0 +1,141 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Model untuk User/Admin
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(VIEWER)
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+// Model untuk Pelanggan
+model Customer {
+  id            String         @id @default(cuid())
+  customerCode  String         @unique
+  name          String
+  address       String?
+  phone         String?
+  category      CustomerCategory
+  isActive      Boolean        @default(true)
+  registeredAt  DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  consumptions  Consumption[]
+  revenues      Revenue[]
+}
+
+enum CustomerCategory {
+  RUMAH_TANGGA
+  KOMERSIAL
+  INDUSTRI
+  SOSIAL
+}
+
+// Model untuk Konsumsi Air
+model Consumption {
+  id           String    @id @default(cuid())
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  period       DateTime  // Periode bulan konsumsi
+  meterStart   Float     // Angka meter awal
+  meterEnd     Float     // Angka meter akhir
+  consumption  Float     // Total konsumsi (m³)
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  @@index([customerId])
+  @@index([period])
+}
+
+// Model untuk menyimpan hasil prediksi dari ML Model
+model ForecastResult {
+  id               String   @id @default(cuid())
+  period           DateTime // Periode yang diprediksi
+  predictedRevenue Float    // Prediksi pendapatan
+  
+  // Jadikan opsional dengan menambahkan '?'
+  lowerBound       Float?   
+  upperBound       Float?   
+  confidence       Float?   
+  modelVersion     String?  
+  features         Json?    
+  
+  createdAt        DateTime @default(now())
+  
+  @@index([period])
+}
+
+// Model untuk Pendapatan
+model Revenue {
+  id               String      @id @default(cuid())
+  customerId       String?
+  customer         Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  
+  period           DateTime    // Periode bulan
+  
+  // Jadikan opsional karena ML saat ini tidak memprediksi pelanggan & konsumsi
+  totalCustomers   Int?        
+  totalConsumption Float?      
+  
+  revenue          Float       // Total pendapatan (Rupiah)
+  type             RevenueType // Aktual atau Forecast
+  
+  accuracy         Float?
+  confidenceLevel  Float?
+  
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  @@index([period])
+  @@index([type])
+}
+
+// PASTIKAN BLOK ENUM INI ADA DI BAWAH MODEL REVENUE
+enum RevenueType {
+  ACTUAL
+  FORECAST
+}
+
+// Model untuk tracking performa model
+model ModelPerformance {
+  id              String   @id @default(cuid())
+  
+  evaluatedAt     DateTime @default(now())
+  modelVersion    String
+  
+  // Metrics
+  mae             Float    // Mean Absolute Error
+  mse             Float    // Mean Squared Error
+  rmse            Float    // Root Mean Squared Error
+  mape            Float    // Mean Absolute Percentage Error
+  r2Score         Float    // R² Score
+  
+  // Metadata
+  datasetSize     Int      // Ukuran dataset evaluasi
+  trainingPeriod  String   // Periode data training
+  
+  createdAt       DateTime @default(now())
+}

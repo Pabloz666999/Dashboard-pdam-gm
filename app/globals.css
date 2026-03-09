@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Anybody:wght@400;600;800&family=Work+Sans:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0077BE;
+  --primary-dark: #005A8F;
+  --secondary: #00A3E0;
+  --accent: #FF6B35;
+  --success: #06D6A0;
+  --warning: #FFD23F;
+  --bg-main: #F8FAFB;
+  --bg-card: #FFFFFF;
+  --text-primary: #1A2332;
+  --text-secondary: #5E6C84;
+  --border: #DFE4EA;
+  --shadow: rgba(26, 35, 50, 0.08);
+}
+
+body {
+  font-family: 'Work Sans', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Anybody', sans-serif;
+  font-weight: 700;
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+}
